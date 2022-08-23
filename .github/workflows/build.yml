@@ -25,7 +25,7 @@ jobs:
           build_dir/toolchain*
         key: ${{ runner.os }}-1806
     - name: make
-      run: make world $(($(nproc)+1)) BUILD_LOG=1
+      run: make world -j$(nproc) BUILD_LOG=1
     - name: pack
       run: tar caf bin.txz bin
     - name: upload artifacts

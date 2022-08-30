@@ -11,6 +11,10 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v3
+    - name: Generate release tag
+      id: tag
+      run: |
+        echo "::set-output name=release_tag::UserBuild_$(git log -1 --format='%h')"
     - name: install pkg
       run: sudo apt update && sudo apt install build-essential gawk flex git gettext libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev -y
     - name: Update & Install feeds
@@ -48,10 +52,6 @@ jobs:
       with:
         name: kmods
         path: kmods.txz
-    - name: Generate release tag
-      id: tag
-      run: |
-        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
     - name: Release
       uses: softprops/action-gh-release@v1
       with:

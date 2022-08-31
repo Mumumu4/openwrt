@@ -101,22 +101,6 @@
 	};
 };
 
-&nand {
-	status = "okay";
-
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
-
-		partition@0 {
-			label = "ubi";
-			reg = <0x0 0x8000000>;
-		};
-
-	};
-};
-
 &spi {
 	status = "okay";
 
@@ -156,6 +140,21 @@
 	};
 };
 
+&nand {
+	status = "okay";
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		partition@0 {
+			label = "ubi";
+			reg = <0x0 0x8000000>;
+		};
+
+	};
+};
 
 &mdio0 {
 	status = "okay";

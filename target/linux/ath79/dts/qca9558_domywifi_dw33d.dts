@@ -126,7 +126,8 @@
 			};
 
 			partition@50000 {
-				label = "oem-firmware";
+				label = "firmware";
+				compatible = "denx,uimage";
 				reg = <0x50000 0xfa0000>;
 			};
 
@@ -148,19 +149,10 @@
 		#size-cells = <1>;
 
 		partition@0 {
-			label = "kernel";
-			reg = <0x0 0x500000>;
-		};
-
-		partition@500000 {
 			label = "ubi";
-			reg = <0x500000 0x5b00000>;
+			reg = <0x0 0x8000000>;
 		};
 
-		partition@6000000 {
-			label = "oem-backup";
-			reg = <0x6000000 0x2000000>;
-		};
 	};
 };
 

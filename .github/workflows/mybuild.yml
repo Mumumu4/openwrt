@@ -15,7 +15,7 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        echo "::set-output name=release_tag::UserBuild_$(git log -1 --format='%h')"
+        echo "release_tag=UserBuild_$(git log -1 --format='%h')" >> $GITHUB_OUTPUT
     - name: install pkg
       run: sudo apt update && sudo apt install build-essential gawk flex git gettext libncurses5-dev libssl-dev python3-distutils rsync unzip zlib1g-dev -y
     - name: Update & Install feeds

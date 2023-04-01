@@ -1,6 +1,7 @@
-name: C/C++ CI
+name: mybuild
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "openwrt-21.02-mod-dw33d" ]
 
@@ -62,3 +63,4 @@ jobs:
           bin/**/*builder*
           kmods.txz
           packages.txz
+

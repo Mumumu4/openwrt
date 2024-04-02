@@ -97,6 +97,21 @@ define Device/domywifi_dw33d
 endef
 TARGET_DEVICES += domywifi_dw33d
 
+define Device/domywifi_dw33d_mod
+  SOC := qca9558
+  DEVICE_VENDOR := DomyWifi
+  DEVICE_MODEL := DW33D
+  DEVICE_PACKAGES := kmod-usb2 kmod-usb-storage kmod-usb-ledtrig-usbport \
+    kmod-ath10k ath10k-firmware-qca988x
+  IMAGE_SIZE := 16000k
+  BLOCKSIZE := 128k
+  PAGESIZE := 2048
+  IMAGES += factory.bin
+  IMAGE/sysupgrade.bin := sysupgrade-tar | append-metadata
+  IMAGE/factory.bin := append-kernel | append-rootfs | pad-rootfs | check-size $$$$(IMAGE_SIZE)
+endef
+TARGET_DEVICES += domywifi_dw33d_mod
+
 define Device/dongwon_dw02-412h
   SOC := qca9557
   DEVICE_VENDOR := Dongwon T&I

@@ -24,7 +24,8 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         wget https://downloads.openwrt.org/releases/23.05.3/targets/ath79/nand/config.buildinfo -qO- \
-          |sed \
+          |sed -e '/CONFIG_TARGET_DEVICE_/d' \
+          -e '/CONFIG_TARGET_ALL_PROFILES/d' \
           -e '$a\CONFIG_TARGET_DEVICE_ath79_nand_DEVICE_domywifi_dw33d_mod=y' \
           -e '$a\CONFIG_TARGET_DEVICE_PACKAGES_ath79_nand_DEVICE_domywifi_dw33d_mod=""' \
           |tee .config
@@ -65,6 +66,9 @@ jobs:
           staging_dir/toolchain*
           staging_dir/host*
         key: ${{ runner.os }}-2305
+
+    - name: fix issues23621
+      run: bash scripts/fix-issues23621.sh
 
     - name: Build everything
       run: make -j$((1+$(nproc))) world BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh

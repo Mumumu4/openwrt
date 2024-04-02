@@ -1,0 +1,94 @@
+name: mybuild
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "openwrt-23.05-mod-dw33d" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: openwrt-23.05-mod-dw33d
+    - name: Generate release tag
+      id: tag
+      run: |
+        echo "release_tag=UserBuild_$(git branch --show-current)_$(git log -1 --format='%h')" >> $GITHUB_OUTPUT
+    - name: install pkg
+      run: sudo apt update && sudo apt install build-essential gcc-multilib g++-multilib clang flex bison g++ gawk gettext git libncurses-dev libssl-dev python3-distutils ccache rsync unzip zlib1g-dev file wget -y
+    - name: prepare feeds & config
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        wget https://downloads.openwrt.org/releases/23.05.3/targets/ath79/nand/config.buildinfo -qO- \
+          |sed \
+          -e '$a\CONFIG_TARGET_DEVICE_ath79_nand_DEVICE_domywifi_dw33d_mod=y' \
+          -e '$a\CONFIG_TARGET_DEVICE_PACKAGES_ath79_nand_DEVICE_domywifi_dw33d_mod=""' \
+          |tee .config
+        make defconfig
+        make -j$((1+$(nproc))) download
+
+    - name: Cache restore
+      id: cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          build_dir/host*
+          build_dir/toolchain*
+          staging_dir/toolchain*
+          staging_dir/host*
+        key: ${{ runner.os }}-2305
+
+    - name: fix cache timestape
+      if: steps.cache-restore.outputs.cache-hit == 'true'
+      run: |
+        find build_dir/{host*,toolchain-*} -name .built\* -exec touch {} \;
+        touch staging_dir/{host*,toolchain-*}/stamp/.*
+
+    - name: Build tools
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      run: make tools/install -j$((1+$(nproc))) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+
+    - name: Build toolchain
+      if: steps.cache-restore.outputs.cache-hit != 'true'
+      run: make toolchain/install -j$((1+$(nproc))) BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+
+    - uses: actions/cache@v4
+      id: cache
+      with:
+        path: |
+          build_dir/host*
+          build_dir/toolchain*
+          staging_dir/toolchain*
+          staging_dir/host*
+        key: ${{ runner.os }}-2305
+
+    - name: Build everything
+      run: make -j$((1+$(nproc))) world BUILD_LOG=1 || ret=$? .github/workflows/scripts/show_build_failures.sh
+
+    - name: pack
+      run: |
+        tar caf kmods.txz -C bin/targets/ath79/nand/packages/ .
+        tar caf packages.txz -C bin/packages/ . || true
+    - name: upload image builder
+      uses: actions/upload-artifact@v3
+      with:
+        name: imagebuilder
+        path: bin/**/*builder*
+    - name: upload packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: kmods
+        path: kmods.txz
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        files: |
+          bin/**/*builder*
+          kmods.txz
+          packages.txz
+
